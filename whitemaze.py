@@ -189,9 +189,15 @@ frame = cv.QueryFrame(camcapture)
 mat = cv.GetMat(frame)
 
 values = thresh.get_item_rgb(mat)
-BLACK_LOWER = cv.CV_RGB(values[0][0],values[1][0],values[2][0])
-BLACK_UPPER = cv.CV_RGB(values[0][1],values[1][1],values[2][1])
+BLACK_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
+BLACK_UPPER = cv.CV_RGB(values[0][1]+2,values[1][1]+2,values[2][1]+2)
 
+values = thresh.get_item_rgb(mat)
+RED_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
+RED_UPPER = cv.CV_RGB(values[0][1]+2,values[1][1]+2,values[2][1]+2)
+values = thresh.get_item_rgb(mat)
+YELLOW_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
+YELLOW_UPPER = cv.CV_RGB(values[0][1]+2,values[1][1]+2,values[2][1]+2)
 while True:
 	frame = cv.QueryFrame(camcapture)
 	mat = cv.GetMat(frame)
@@ -201,7 +207,7 @@ while True:
 		break
 	blackedOut = mark_pixels(mat, BLACK_LOWER,  BLACK_UPPER)
 	redPixels = mark_pixels(mat, RED_LOWER, RED_UPPER)
-	yellowPixels = mark_pixels(mat, TEST_LOW, TEST_UP)
+	yellowPixels = mark_pixels(mat, YELLOW_LOWER, YELLOW_UPPER)
 	redCenter = center_of_mass(redPixels)
 	yellowCenter = center_of_mass(yellowPixels)
 	if redCenter != None:
