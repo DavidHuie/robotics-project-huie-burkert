@@ -2,7 +2,7 @@ import json
 import math
 import cv
 from cluster import HierarchicalClustering as HC
-
+from servo_api import *
 with open('data.json', 'r') as f:
 	data = json.load(f)
 
@@ -23,6 +23,8 @@ MAZE = RGBRange()
 PAN_ANGLE = data["pan_angle"]
 TILT_ANGLE = data["tilt_angle"]
 
+threshold = 10
+
 def get_relevant_points(image_m, R, G, B):
 	points = []
 	
@@ -30,7 +32,7 @@ def get_relevant_points(image_m, R, G, B):
 	
 	for y in range(image_m.rows):
 		for x in range(image_m.cols):
-			
+		
 			b,g,r,_ = cv.Get2D(image_m, y, x)
 
 			if compare(R, r) and compare(G, g) and compare(B, b):
@@ -121,7 +123,28 @@ def dfs_helper(graph, start, end, visited):
 			if l:
 				return [start] + l
 	return False
-	
+
+
+def move_servo(point1, point2):
+	if abs(point1[0] - point2[0]) > TOLERANCE or  abs(point1[1] - point2[1]) > TOLERANCE:
+			
+		if  abs(point1[0] - point2[0]) > abs(point1[1] - point2[1]):
+			if point1[0] > point2[0]:
+				PAN_ANGLE = delta_move(0, PAN_ANGLE, delta = -1)
+			else:
+				  
+				PAN_ANGLE = delta_move(0, PAN_ANGLE)
+		else:
+			if point1[1] > point2[1]:
+				PAN_ANGLE = delta_move(1, PAN_ANGLE, delta = -1)
+			else:
+				PAN_ANGLE = delta_move(1, PAN_ANGLE)
+		capture = cv.CapturefromCAM(CAMERA)
+		image = cv.GetMat(cv.QueryFrame(cam_capture))
+		points = get_relevant_points(image, LASER.r, LASER.g, LASER.b)
+		point1 = center_of_mass(points)
+		move_servo(point1, point2)		 
+
 
 CAMERA = 0 # use default camera
 cam_capture = cv.CaptureFromCAM(CAMERA)
@@ -143,6 +166,11 @@ print "graph", graph
 
 path = dfs(graph, start_point, end_point)
 print path
+
+for i in path[1:]
+	next = path[i]
+	current = path[i-1]
+	move_servo(point1, point2) 
 
 
 ## marked = mark_points(image, points)

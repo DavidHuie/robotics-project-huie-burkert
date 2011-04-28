@@ -16,9 +16,16 @@ RED_LOWER = cv.CV_RGB(195,155,140)
 
 TEST_UP = cv.CV_RGB(255,205,100)
 TEST_LOW = cv.CV_RGB(125,125,0)
-TOLERANCE = 20
-LOWER = 10
-UPPER = 30
+TOLERANCE = 50
+LOWER = 30
+UPPER = 120
+x = 15
+
+
+
+
+
+
 
 with open('data.json', 'r') as f:
 	data = json.load(f)
@@ -82,7 +89,7 @@ def has_won(mat, tolerance):
 	else:
 		return False 
 
-def find_nearest_wall(mat,pixel, direction):
+def get_nearest_wall(mat,pixel, direction):
 	"""finds nearest marked pixel
 	mat: marked image matrix
 	direction: NSEW"""
@@ -107,7 +114,7 @@ def find_nearest_wall(mat,pixel, direction):
 			value = cv.Get2D(mat, pixel[0] + counter, pixel[1] + counter)
 		if value[0] < 1:
 			return counter
-
+		counter += 1
 
 def return_right(orientation):
 	if orientation == "N":
@@ -150,21 +157,21 @@ def return_right_angle(orientation):
 
 def get_new_position(orientation, position):
 	if orientation == "N":
-		return (position[0], position[1] + 1)
+		return (position[0] - x, position[1])
 	if orientation == "NE":
-		return (position[0] + 1, position[1] + 1)
+		return (position[0] - x, position[1] + x)
 	if orientation == "E":
-		return (position[0] + 1, position[1])
+		return (position[0], position[1]+x)
 	if orientation == "SE":
-		return (position[0]+ 1, position[1] - 1)
+		return (position[0]+ x, position[1] + x)
 	if orientation == "S":
-		return (position[0], position[1] - 1)
+		return (position[0] +x, position[1])
 	if orientation == "SW":
-		return (position[0] - 1 , position[1] - 1)
+		return (position[0] + x , position[1] - x)
 	if orientation == "W":
-		return (position[0] - 1, position[1])
+		return (position[0], position[1] -x)
 	if orientation == "NW":
-		return (position[0] - 1, position[1] + 1)
+		return (position[0] - x, position[1] - x)
 	return position
 
 def move(orientation, position, counter, frontCounter, lower, upper):
@@ -182,6 +189,17 @@ def move(orientation, position, counter, frontCounter, lower, upper):
 		move_motor(return_right(orientation), position)
 		return return_right(orientation)
 
+def simulated_move(orientation, counter, frontCounter, lower, upper):
+	if frontCounter < lower or counter< lower:
+		newOrientation = orientation
+		for i in range(7):
+			newOrientation = return_right(newOrientation)
+		return newOrientation
+	if counter >= lower and counter <= upper:
+		return orientation
+	if counter > upper:
+		return return_right(orientation)
+	
 def move_motor(direction, position):
 	newPosition = get_new_position(direction, position)
 	servo_api.move(1, newPosition)
@@ -194,6 +212,52 @@ def get_move(orientation, position, mat, redCenter):
 	newOrientation = move(orientation, position, distance,frontDistance, LOWER, UPPER)
 	return newOrientation, get_new_position(newOrientation, position)
 
+
+def get_simulated_move(orientation, mat, redCenter, black):
+	rightAngle = return_right_angle(orientation)
+	distance = get_nearest_wall(black, redCenter, rightAngle)
+	frontDistance = get_nearest_wall(black, redCenter, orientation)
+	return simulated_move(orientation, distance, frontDistance, LOWER, UPPER)
+
+def has_simulated_won(position, yellowCenter):
+	if position == None or yellowCenter == None:
+		return False
+	if abs(position[0] - yellowCenter[0]) < TOLERANCE and abs(position[1] - yellowCenter[1]) < TOLERANCE:
+		return True
+	return False
+def simulate(photo):
+	mat = cv.LoadImageM(photo)
+	print "Get Maze"
+	maze = thresh.get_item_rgb(mat)
+	BLACK_LOWER = cv.CV_RGB(maze[0][0]-2, maze[1][0]-2,maze[2][0]-2)
+	BLACK_UPPER = cv.CV_RGB(maze[0][1]+2, maze[1][1]+2,maze[2][1]+2)
+	print "Get End"
+	maze = thresh.get_item_rgb(mat)
+	YELLOW_LOWER = cv.CV_RGB(maze[0][0]-2, maze[1][0]-2,maze[2][0]-2)
+	YELLOW_UPPER = cv.CV_RGB(maze[0][1]+2, maze[1][1]+2,maze[2][1]+2)
+	print "Get Beginning"
+	maze = thresh.get_item_rgb(mat)
+	BLUE_LOWER = cv.CV_RGB(maze[0][0]-2, maze[1][0]-2,maze[2][0]-2)
+	BLUE_UPPER = cv.CV_RGB(maze[0][1]+2, maze[1][1]+2,maze[2][1]+2)
+	
+	blue = mark_pixels(mat, BLUE_LOWER, BLUE_UPPER)
+	yellow = mark_pixels(mat, YELLOW_LOWER, YELLOW_UPPER)
+	black = mark_pixels(mat, BLACK_LOWER, BLACK_UPPER)
+	end = center_of_mass(yellow)
+	position = center_of_mass(blue)
+	orientation = "N"
+	print position, end
+	while not has_simulated_won(position, end):
+		print position, end
+		orientation = get_simulated_move(orientation, mat, position, black)
+		position = get_new_position(orientation, position)
+		temp = cv.CloneMat(mat)
+		cv.Circle(temp, position, 3, (255,0,0,0))
+		cv.ShowImage("temp", temp)
+
+
+#simulate("photo.JPG")
+'''
 camcapture = cv.CreateCameraCapture(0)
 cv.SetCaptureProperty(camcapture, cv.CV_CAP_PROP_FRAME_WIDTH, 640)
 cv.SetCaptureProperty(camcapture, cv.CV_CAP_PROP_FRAME_HEIGHT, 480)
@@ -206,23 +270,15 @@ frame = cv.QueryFrame(camcapture)
 mat = cv.GetMat(frame)
 
 values = thresh.get_item_rgb(mat)
-print "ID Maze"
-BLACK_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
-BLACK_UPPER = cv.CV_RGB(values[0][1]+2,values[1][1]+2,values[2][1]+2)
 
-values = thresh.get_item_rgb(mat)
-print "ID Laser"
-RED_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
-RED_UPPER = cv.CV_RGB(values[0][1]+2,values[1][1]+2,values[2][1]+2)
-
-print "ID Goal"
-values = thresh.get_item_rgb(mat)
-YELLOW_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
-YELLOW_UPPER = cv.CV_RGB(values[0][1]+2,values[1][1]+2,values[2][1]+2)
-
-print "ID Start"
-BLUE_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
-BLUE_UPPER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
+BLACK_LOWER = cv.CV_RGB(MAZE_R[0]-2,MAZE_G[0]-2,MAZE_B[0]-2)
+BLACK_UPPER = cv.CV_RGB(MAZE_R[1]+2,MAZE_G[1]+2,MAZE_B[1]+2)
+RED_LOWER = cv.CV_RGB(LASER_R-2,MAZE_G-2,MAZE_B-2)
+RED_LOWER = cv.CV_RGB(L_R-2,MAZE_G-2,MAZE_B-2)
+YELLOW_LOWER = cv.CV_RGB(MAZE_R-2,MAZE_G-2,MAZE_B-2)
+YELLOW_UPPER = cv.CV_RGB(MAZE_R-2,MAZE_G-2,MAZE_B-2)
+BLUE_LOWER = cv.CV_RGB(MAZE_R-2,MAZE_G-2,MAZE_B-2)
+BLUE_UPPER = cv.CV_RGB(MAZE_R-2,MAZE_G-2,MAZE_B-2)
 
 orientation = "N"
 position = (PAN_ANGLE, TILT_ANGLE)
@@ -253,3 +309,4 @@ while True:
 	## cv.ShowImage('Processed3',yellowPixels)
 
 	k = cv.WaitKey(10)
+'''
