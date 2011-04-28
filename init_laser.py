@@ -5,7 +5,7 @@ import cv
 CAMERA = 0 # use default camera
 cam_capture = cv.CaptureFromCAM(CAMERA)
 
-print "Press enter when ready to capture initilization image from cam. Also, point laser at board."
+print "Point laser at board and press enter when ready to capture calibration image from cam."
 dummy = raw_input()
 
 # Acquire image
@@ -32,8 +32,15 @@ def check_for_color(r_range, g_range, b_range):
 print "Press enter when ready for init step"
 dummy = raw_input()
 
-move(PAN_SERVO, (PAN_MIN + PAN_MAX)/2)
-move(TILT_SERVO, (TILT_MIN + TILT_MAX)/2)
+# Move servos to starting position
+INIT_PAN_ANGLE = (PAN_MIN + PAN_MAX)/2
+INIT_TILT_ANGLE = TILT_MIN
 
+move(PAN_SERVO, INIT_PAN_ANGLE)
+move(TILT_SERVO, INIT_TILT_ANGLE)
+
+# Create callback that checks for laser
 callback = lambda: check_for_color(LASER_R, LASER_G, LASER_B)
-move_until_callback(TILT_SERVO, callback, start_angle = TILT_MIN, end_angle = TILT_MAX)
+
+# Move tilt servo until laser is recorded and record the servo's position
+INIT_TILT_ANGLE = move_until_callback(TILT_SERVO, callback, start_angle = INIT_TILT_ANGLE, end_angle = TILT_MAX)
