@@ -1,8 +1,7 @@
 import cv
 import thresh
-
+import json
 import servo_api
-import init_laser
 #import numpy
 #import Image
 
@@ -20,6 +19,18 @@ TEST_LOW = cv.CV_RGB(125,125,0)
 TOLERANCE = 20
 LOWER = 10
 UPPER = 30
+
+with open('data.json', 'r') as f:
+	data = json.load(f)
+
+[LASER_R, LASER_G, LASER_B] = data["laser"]
+[START_R, START_G, START_B] = data["start"]
+[END_R, END_G, END_B] = data["end"]
+[MAZE_R, MAZE_G, MAZE_B] = data["maze"]
+PAN_ANGLE = data["pan_angle"]
+TILT_ANGLE = data["tilt_angle"]
+
+
 def mark_pixels(image, lower, upper):
 	"""
 	returns a numpy array with pixels marked that are between the lower and upper rgb tolerances

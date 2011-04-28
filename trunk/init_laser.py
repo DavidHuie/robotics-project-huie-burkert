@@ -2,6 +2,7 @@ from servo_api import *
 from thresh import get_item_rgb
 #from whitemaze import center_of_mass
 import cv
+import json
 
 CAMERA = 0 # use default camera
 cam_capture = cv.CaptureFromCAM(CAMERA)
@@ -40,6 +41,7 @@ def move_laser_to_start(tilt_angle, pan_angle, tolerance):
         
         angle = delta_move(TILT_SERVO, angle, delta = delta)
 
+    global PAN_ANGLE
     PAN_ANGLE = angle
 
     print "Found Y"
@@ -67,6 +69,8 @@ def move_laser_to_start(tilt_angle, pan_angle, tolerance):
         angle = delta_move(PAN_SERVO, angle, delta = delta)
 
     print "Found X"
+
+    global TILT_ANGLE
     TILT_ANGLE = angle
 
 def center_of_mass(marked):
@@ -141,6 +145,10 @@ print "Identify maze"
 
 MAZE_R, MAZE_G, MAZE_B = get_item_rgb(image)
 
+print "Identify grid"
+
+GRID_R, GRID_G, GRID_B = get_item_rgb(image)
+
 def check_for_color(r_range, g_range, b_range):
     image =  cv.GetMat(cv.QueryFrame(cam_capture))
     
@@ -173,5 +181,13 @@ INIT_TILT_ANGLE = move_until_callback(TILT_SERVO, callback, start_angle = INIT_T
 
 move_laser_to_start(INIT_TILT_ANGLE, INIT_PAN_ANGLE, tolerance = 30)
 
-      
-        
+data = { "laser": [LASER_R, LASER_G, LASER_B],
+         "start": [START_R, START_G, START_B],
+         "end": [END_R, END_G, END_B],
+         "maze": [MAZE_R, MAZE_G, MAZE_B],
+         "grid": [GRID_R, GRID_G, GRID_B],
+         "pan_angle": PAN_ANGLE,
+         "tilt_angle": TILT_ANGLE }
+
+with open("data.json", 'w') as f:
+    json.dump(data, f)
