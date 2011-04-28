@@ -6,15 +6,12 @@ class RGBItem:
         self.G = None
         self.B = None
         self.image = image
-        self.clicks = 0
 
     def register_coordinates(self, event, x, y, flags, param):
         if event != cv.CV_EVENT_LBUTTONDOWN:
             return
 
-        self.clicks += 1
-
-        b,g,r,_ = list(cv.Get2D(self.image, y, x))
+        b,g,r,_ = cv.Get2D(self.image, y, x)
 
         print "Point selected with RGB =", (r,g,b)
 
@@ -26,9 +23,6 @@ class RGBItem:
             for C, c in zip([self.R,self.G,self.B], [r,g,b]):
                 if c < C[0]: C[0] = c
                 elif c > C[1]: C[1] = c
-
-    def get_clicks(self):
-        return self.clicks
 
     def get_R(self): return self.R
     def get_G(self): return self.G
@@ -44,9 +38,7 @@ def get_item_rgb(image):
     cv.SetMouseCallback(window, item.register_coordinates)
     cv.ShowImage(window, image)
 
-    
-
-    print "Please select item as many times as possible. Press any key on the keyboard when finished."
+    print "Please select the item as many times as possible. Press any key on the keyboard when finished."
 
     cv.WaitKey()
 
