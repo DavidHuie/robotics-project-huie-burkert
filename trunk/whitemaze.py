@@ -16,7 +16,9 @@ RED_LOWER = cv.CV_RGB(195,155,140)
 
 TEST_UP = cv.CV_RGB(255,205,100)
 TEST_LOW = cv.CV_RGB(125,125,0)
-TOLERANCE = 40
+TOLERANCE = 20
+LOWER = 5
+UPPER = 20
 def mark_pixels(image, lower, upper):
 	"""
 	returns a numpy array with pixels marked that are between the lower and upper rgb tolerances
@@ -75,22 +77,22 @@ def find_nearest_wall(mat,pixel, direction):
 	counter = 1
 	while True:
 		if direction == "N":
-			value = cv.Get2D(mat, pixel[0], pixel[1] + counter)
-		if direction == "S":
-			value = cv.Get2D(mat, pixel[0], pixel[1] - counter)
-		if direction == "E":
-			value = cv.Get2D(mat, pixel[0]+ counter, pixel[1])
-		if direction == "W":
 			value = cv.Get2D(mat, pixel[0] - counter, pixel[1])
+		if direction == "S":
+			value = cv.Get2D(mat, pixel[0] + counter, pixel[1])
+		if direction == "E":
+			value = cv.Get2D(mat, pixel[0], pixel[1] + counter)
+		if direction == "W":
+			value = cv.Get2D(mat, pixel[0], pixel[1] - counter)
 
 		if direction == "NW":
-			value = cv.Get2D(mat, pixel[0] - counter, pixel[1] + counter)
-		if direction == "SW":
 			value = cv.Get2D(mat, pixel[0] - counter, pixel[1] - counter)
-		if direction == "NE":
-			value = cv.Get2D(mat, pixel[0] +  counter, pixel[1] + counter)
-		if direction == "SE":
+		if direction == "SW":
 			value = cv.Get2D(mat, pixel[0] + counter, pixel[1] - counter)
+		if direction == "NE":
+			value = cv.Get2D(mat, pixel[0] -  counter, pixel[1] + counter)
+		if direction == "SE":
+			value = cv.Get2D(mat, pixel[0] + counter, pixel[1] + counter)
 		if value[0] < 1:
 			return counter
 
@@ -152,6 +154,7 @@ def get_new_position(orientation, position):
 	if orientation == "NW":
 		return (position[0] - 1, position[1] + 1)
 	return position
+
 def move(orientation, position, counter, frontCounter, lower, upper):
 	if frontCounter < lower or counter< lower:
 	
@@ -175,7 +178,7 @@ def move_motor(direction, position):
 def get_move(orientation, position, mat, redCenter):
 	rightAngle = return_right_angle(orientation)
 	distance = get_nearest_wall(mat, redCenter, rightAngle)
-	frontDistance = get_nearest_wall(mat, redCenter, orientation
+	frontDistance = get_nearest_wall(mat, redCenter, orientation)
 	newOrientation = move(orientation, position, distance,frontDistance, LOWER, UPPER)
 	return (newOrientation, get_new_position(newOrientation, position))
 
