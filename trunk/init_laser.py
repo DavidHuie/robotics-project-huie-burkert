@@ -17,9 +17,9 @@ def move_laser_to_start(tilt_angle, pan_angle, tolerance):
 
     # Orient vertically
     if start_y > laser_y:
-        delta = -1
-    else:
         delta = 1
+    else:
+        delta = -1
 
     angle = tilt_angle
     while ( abs(start_y - laser_y) >= tolerance ):
@@ -133,6 +133,13 @@ print "Identify starting marker"
 
 START_R, START_G, START_B = get_item_rgb(image)
 
+print "Identify ending marker"
+
+END_R, END_G, END_B = get_item_rgb(image)
+
+print "Identify maze"
+
+MAZE_R, MAZE_G, MAZE_B = get_item_rgb(image)
 
 def check_for_color(r_range, g_range, b_range):
     image =  cv.GetMat(cv.QueryFrame(cam_capture))

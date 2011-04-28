@@ -226,20 +226,19 @@ while True:
 	redPixels = mark_pixels(mat, RED_LOWER, RED_UPPER)
 	redCenter = center_of_mass(redPixels)
 	orientation, position = get_move(orientation, position, mat, redCenter)
-'''
-	blackedOut = mark_pixels(mat, BLACK_LOWER,  BLACK_UPPER)
-	redPixels = mark_pixels(mat, RED_LOWER, RED_UPPER)
-	yellowPixels = mark_pixels(mat, YELLOW_LOWER, YELLOW_UPPER)
-	redCenter = center_of_mass(redPixels)
-	yellowCenter = center_of_mass(yellowPixels)
-	if redCenter != None:
-		cv.Circle(mat, redCenter, 5, (255,0,0,0))
-	if yellowCenter != None:
-		cv.Circle(mat, yellowCenter, 5, (0,255,0,0))
-	cv.ShowImage('Camera', mat)
-	cv.ShowImage('Processed', blackedOut)
-	cv.ShowImage('Processed2',redPixels)
-	cv.ShowImage('Processed3',yellowPixels)
-'''
+
+	## blackedOut = mark_pixels(mat, BLACK_LOWER,  BLACK_UPPER)
+	## redPixels = mark_pixels(mat, RED_LOWER, RED_UPPER)
+	## yellowPixels = mark_pixels(mat, YELLOW_LOWER, YELLOW_UPPER)
+	## redCenter = center_of_mass(redPixels)
+	## yellowCenter = center_of_mass(yellowPixels)
+	## if redCenter != None:
+	## 	cv.Circle(mat, redCenter, 5, (255,0,0,0))
+	## if yellowCenter != None:
+	## 	cv.Circle(mat, yellowCenter, 5, (0,255,0,0))
+	## cv.ShowImage('Camera', mat)
+	## cv.ShowImage('Processed', blackedOut)
+	## cv.ShowImage('Processed2',redPixels)
+	## cv.ShowImage('Processed3',yellowPixels)
+
 	k = cv.WaitKey(10)
-'''
