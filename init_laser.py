@@ -29,7 +29,7 @@ def check_for_color(r_range, g_range, b_range):
                         return True
     return False
 
-print "Reconnect servos and press enter when ready for init step"
+print "Press enter when ready for init step"
 dummy = raw_input()
 
 move(PAN_SERVO, (PAN_MIN + PAN_MAX)/2)
