@@ -53,7 +53,7 @@ def center_of_mass(marked):
 				xtotal += j
 				ytotal += i
 	if total == 0:
-		return None
+		return None, None
 	return (xtotal/total, ytotal/total)
 
 def has_won(mat, tolerance):

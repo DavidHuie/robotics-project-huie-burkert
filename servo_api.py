@@ -55,7 +55,7 @@ PAN_MAX = 180
 TILT_MIN = 0
 TILT_MAX = 150
 
-def move_until_callback(servo, callback, start_angle = 0, end_angle = 150, delta = 1, sleep_time = .05, clockwise = True):
+def move_until_callback(servo, callback, start_angle = 0, end_angle = 150, delta = 1, sleep_time = .01, clockwise = True):
     """
     Moves the servo until callback evaluates to True or the servo has
     completely moved from start_angle to end_angle.
@@ -72,3 +72,9 @@ def move_until_callback(servo, callback, start_angle = 0, end_angle = 150, delta
             start_angle -= delta
 
     return start_angle
+
+def delta_move(servo, start_angle, delta = 1, sleep_time = .05):
+    angle = start_angle + delta
+    move(servo, angle)
+    time.sleep(sleep_time)
+    return angle
