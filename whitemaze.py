@@ -1,7 +1,8 @@
 import cv
 import thresh
 
-#import servo_api
+import servo_api
+import init_laser
 #import numpy
 #import Image
 
@@ -17,8 +18,8 @@ RED_LOWER = cv.CV_RGB(195,155,140)
 TEST_UP = cv.CV_RGB(255,205,100)
 TEST_LOW = cv.CV_RGB(125,125,0)
 TOLERANCE = 20
-LOWER = 5
-UPPER = 20
+LOWER = 10
+UPPER = 30
 def mark_pixels(image, lower, upper):
 	"""
 	returns a numpy array with pixels marked that are between the lower and upper rgb tolerances
@@ -180,7 +181,7 @@ def get_move(orientation, position, mat, redCenter):
 	distance = get_nearest_wall(mat, redCenter, rightAngle)
 	frontDistance = get_nearest_wall(mat, redCenter, orientation)
 	newOrientation = move(orientation, position, distance,frontDistance, LOWER, UPPER)
-	return (newOrientation, get_new_position(newOrientation, position))
+	return newOrientation, get_new_position(newOrientation, position)
 
 camcapture = cv.CreateCameraCapture(0)
 cv.SetCaptureProperty(camcapture, cv.CV_CAP_PROP_FRAME_WIDTH, 640)
@@ -194,16 +195,26 @@ frame = cv.QueryFrame(camcapture)
 mat = cv.GetMat(frame)
 
 values = thresh.get_item_rgb(mat)
+print "ID Maze"
 BLACK_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
 BLACK_UPPER = cv.CV_RGB(values[0][1]+2,values[1][1]+2,values[2][1]+2)
 
 values = thresh.get_item_rgb(mat)
+print "ID Laser"
 RED_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
 RED_UPPER = cv.CV_RGB(values[0][1]+2,values[1][1]+2,values[2][1]+2)
+
+print "ID Goal"
 values = thresh.get_item_rgb(mat)
 YELLOW_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
 YELLOW_UPPER = cv.CV_RGB(values[0][1]+2,values[1][1]+2,values[2][1]+2)
 
+print "ID Start"
+BLUE_LOWER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
+BLUE_UPPER = cv.CV_RGB(values[0][0]-2,values[1][0]-2,values[2][0]-2)
+
+orientation = "N"
+position = (PAN_ANGLE, TILT_ANGLE)
 while True:
 	frame = cv.QueryFrame(camcapture)
 	mat = cv.GetMat(frame)
@@ -211,6 +222,11 @@ while True:
 		break
 	if has_won(mat, TOLERANCE):
 		break
+	
+	redPixels = mark_pixels(mat, RED_LOWER, RED_UPPER)
+	redCenter = center_of_mass(redPixels)
+	orientation, position = get_move(orientation, position, mat, redCenter)
+'''
 	blackedOut = mark_pixels(mat, BLACK_LOWER,  BLACK_UPPER)
 	redPixels = mark_pixels(mat, RED_LOWER, RED_UPPER)
 	yellowPixels = mark_pixels(mat, YELLOW_LOWER, YELLOW_UPPER)
@@ -224,5 +240,6 @@ while True:
 	cv.ShowImage('Processed', blackedOut)
 	cv.ShowImage('Processed2',redPixels)
 	cv.ShowImage('Processed3',yellowPixels)
+'''
 	k = cv.WaitKey(10)
-
+'''
