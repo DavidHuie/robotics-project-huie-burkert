@@ -133,6 +133,7 @@ print "Identify starting marker"
 
 START_R, START_G, START_B = get_item_rgb(image)
 
+
 def check_for_color(r_range, g_range, b_range):
     image =  cv.GetMat(cv.QueryFrame(cam_capture))
     
