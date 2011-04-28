@@ -152,29 +152,31 @@ def get_new_position(orientation, position):
 	if orientation == "NW":
 		return (position[0] - 1, position[1] + 1)
 	return position
-def move(orientation, position, counter, lower, upper):
+def move(orientation, position, counter, frontCounter, lower, upper):
+	if frontCounter < lower or counter< lower:
+	
+		newOrientation = orientation
+		for i in range(7):
+			newOrientation = return_right(newOrientation)
+		move_motor(newOrientation, position)
+		return newOrientation
 	if counter > lower and counter < upper:
 		move_motor(orientation, position)
 		return orientation
 	if counter > upper:
 		move_motor(return_right(orientation), position)
 		return return_right(orientation)
-	if counter < lower:
-		newOrientation = orientation
-		for i in range(7):
-			newOrientation = return_right(newOrientation)
-		move_motor(newOrientation, position)
-		return new_orientation
 
 def move_motor(direction, position):
 	newPosition = get_new_position(direction, position)
 	servo_api.move(1, newPosition)
 	servo_api.move(2, newPosition)
 
-def get_move(orientation, position, mat):
+def get_move(orientation, position, mat, redCenter):
 	rightAngle = return_right_angle(orientation)
-	distance = get_nearest_wall(mat, rightAngle, orientation)
-	newOrientation = move(orientation, position, counter, LOWER, UPPER)
+	distance = get_nearest_wall(mat, redCenter, rightAngle)
+	frontDistance = get_nearest_wall(mat, redCenter, orientation
+	newOrientation = move(orientation, position, distance,frontDistance, LOWER, UPPER)
 	return (newOrientation, get_new_position(newOrientation, position))
 
 camcapture = cv.CreateCameraCapture(0)
