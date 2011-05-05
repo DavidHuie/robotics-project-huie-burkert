@@ -3,6 +3,8 @@ import math
 import cv
 from cluster import HierarchicalClustering as HC
 from servo_api import *
+#from init_laser import PAN_ANGLE, TILT_ANGLE
+
 with open('data.json', 'r') as f:
 	data = json.load(f)
 
@@ -23,7 +25,7 @@ MAZE = RGBRange()
 PAN_ANGLE = data["pan_angle"]
 TILT_ANGLE = data["tilt_angle"]
 
-threshold = 10
+TOLERANCE = 10
 
 def get_relevant_points(image_m, R, G, B):
 	points = []
@@ -56,13 +58,17 @@ def get_center(image_m, obj):
 	return center_of_mass_points(points)
 
 def get_grid_locations(image_m, max_dist = 50):
-	points = get_relevant_points(image_m, GRID.r, GRID.g, GRID.b)
-	clusterer = HC(points, point_distance)
-	clusters = clusterer.getlevel(max_dist)
+	return [get_center(image_m, GRID)]
+	
+	## points = get_relevant_points(image_m, GRID.r, GRID.g, GRID.b)
+	## clusterer = HC(points, point_distance)
+	## clusters = clusterer.getlevel(max_dist)
 
-	coords = [center_of_mass_points(c) for c in clusters]
+	## print "clusters", clusters
 
-	return coords
+	## coords = [center_of_mass_points(c) for c in clusters]
+
+	## return coords
 
 def mark_points(image_m, points):
 	point_set = set(points)
@@ -77,7 +83,7 @@ def mark_points(image_m, points):
 				cv.Set2D(copy, y, x, cv.RGB(255,255,255))
 	return copy
 
-def no_obstacle(point1, point2, image_m):
+def no_obstacle(point1, point2, image_m, threshold = 10):
 	if point1 == point2: return False
 	
 	x1, y1 = point1
@@ -90,11 +96,16 @@ def no_obstacle(point1, point2, image_m):
 
 	compare = lambda color, val: color[0] <= val <= color[1]
 
+	count = 0
+
 	for x, y in points:
+		if count == threshold:
+			return False
+		
 		b,g,r,_ = cv.Get2D(image_m, y, x)
 		for obj in [MAZE]:
 			if compare(obj.r, r) and compare(obj.g, g) and compare(obj.b, b):
-				return False
+				count += 1
 	return True
 
 def create_graph(points, start_point, end_point, image_m):
@@ -124,8 +135,9 @@ def dfs_helper(graph, start, end, visited):
 				return [start] + l
 	return False
 
-
 def move_servo(point1, point2):
+	global PAN_ANGLE, TILT_ANGLE
+	
 	if abs(point1[0] - point2[0]) > TOLERANCE or  abs(point1[1] - point2[1]) > TOLERANCE:
 			
 		if  abs(point1[0] - point2[0]) > abs(point1[1] - point2[1]):
@@ -136,13 +148,13 @@ def move_servo(point1, point2):
 				PAN_ANGLE = delta_move(0, PAN_ANGLE)
 		else:
 			if point1[1] > point2[1]:
-				PAN_ANGLE = delta_move(1, PAN_ANGLE, delta = -1)
+				TILT_ANGLE = delta_move(1, TILT_ANGLE, delta = -1)
 			else:
-				PAN_ANGLE = delta_move(1, PAN_ANGLE)
-		capture = cv.CapturefromCAM(CAMERA)
+				TILT_ANGLE = delta_move(1, TILT_ANGLE)
+		capture = cv.CaptureFromCAM(CAMERA)
 		image = cv.GetMat(cv.QueryFrame(cam_capture))
 		points = get_relevant_points(image, LASER.r, LASER.g, LASER.b)
-		point1 = center_of_mass(points)
+		point1 = center_of_mass_points(points)
 		move_servo(point1, point2)		 
 
 
@@ -167,13 +179,13 @@ print "graph", graph
 path = dfs(graph, start_point, end_point)
 print path
 
-for i in path[1:]
+move(PAN_SERVO, PAN_ANGLE)
+move(TILT_SERVO, TILT_ANGLE)
+
+raw_input()
+
+for i, value in enumerate(path[1:]):
 	next = path[i]
 	current = path[i-1]
-	move_servo(point1, point2) 
-
-
-## marked = mark_points(image, points)
-## cv.ShowImage('marked', marked)
-## raw_input()
+	move_servo(current, next)
         
